@@ -2,6 +2,7 @@ from django.shortcuts import render, HttpResponse, redirect, reverse
 from django.http import JsonResponse
 from django.db.models import Max, Count
 import bcrypt
+import sys
 from . import models
 
 # Create your views here.
@@ -86,12 +87,12 @@ def home_view(request):
     else:
         return redirect(reverse('signin_view'))
 
-def user_level_control(value,is_admin):
+def user_level_control(value,is_admin,user_id):
     if is_admin:
         if value == "admin":
-            return "<select><option value='admin' selected>admin</option><option value='normal'>normal</option></select>"
+            return f"<select class='user_level_dropdown' user_id='{user_id}'><option value='admin' selected>admin</option><option value='normal'>normal</option></select>"
         else:
-            return "<select><option value='admin'>admin</option><option value='normal' selected>normal</option></select>"
+            return f"<select class='user_level_dropdown' user_id='{user_id}'><option class='user_level_dropdown' value='admin'>admin</option><option value='normal' selected>normal</option></select>"
     else:
         return value
 
@@ -107,7 +108,7 @@ def manage_users_view(request):
             f"<a href='../users/edit/{user.id}'>{user.first_name} {user.last_name}</a>",
             user.email,
             user.created_at.strftime('%m-%d-%Y'),
-            user_level_control(user.user_level, logged_in_user.user_level == "admin")
+            user_level_control(user.user_level, logged_in_user.user_level == "admin", user.id)
         ]
         if logged_in_user.user_level == "admin":
             data_row.append(f'<a href="../users/edit/{user.id}">edit</a> | <a href="/users/delete/{user.id}">remove</a>')
@@ -146,4 +147,23 @@ def edit_user_view(request, user_id):
         'user' : user
     }
     return render(request,"edit_user.html", context)
+
+def set_user_level_api(request):
+    response = {
+        'status' : 'unknown',
+        'message' : 'unknown status'
+    }
+    if request.method == "POST":
+        user_id = int(request.POST["user_id"])
+        user_level = request.POST["user_level"]
+        try:
+            user = models.User.objects.get(id=user_id)
+            user.user_level = user_level
+            user.save()
+            response["status"] = "succeeded"
+            response["message"] = f"[{user.email}] set to user_level [{user.user_level}]."
+        except:
+            response['status'] = "failed"
+            response['message'] = str(sys.exc_info()[0])
+    return JsonResponse(response)
 

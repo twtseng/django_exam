@@ -92,21 +92,10 @@
     }
     function validateRegistrationFields(first_name,last_name,email,password,confirm_password) {
         validation_errors = ''
-        if (first_name.length < 2) {
-            validation_errors += "First name must be at least 2 chars<br>"
-        }
-        if (last_name.length < 2) {
-            validation_errors += "Last name must be at least 2 chars<br>"
-        }
-        const re = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
-        if (!re.test(String(email).toLowerCase())) {
-            validation_errors += "Invalid email address<br>"
-        }
-        if (password.length < 8) {
-            validation_errors += "Password must be at least 8 chars<br>"
-        } else if (password != confirm_password) {
-            validation_errors += "Passwords do not match"
-        }
+        validation_errors += validate_first_name(first_name);
+        validation_errors += validate_last_name(last_name);
+        validation_errors += validate_email(email);
+        validation_errors += validate_password(password, confirm_password);
         if (validation_errors.length > 0) {
             $('#registration_status').html(validation_errors);
             $('#registration_status').css('color','red');

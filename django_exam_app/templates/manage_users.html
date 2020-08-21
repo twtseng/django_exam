@@ -8,6 +8,7 @@
 {% endblock %}
 {% block content %}
 <div class="jumbotron">
+    {% csrf_token %}
     <div class="container">
       {% if user_level == "admin" %}
       <h1 class="display-3">Manage Users</h1><a class="btn btn-primary btn-lg" href="/users/new" role="button">Add new &raquo;</a>
@@ -38,5 +39,26 @@
 {% endblock %}
 {% block script %}
 <script>
+function set_user_level() {
+  user_id = $(this).attr('user_id');
+  user_level = $(this).val();
+  console.log(`set_user_level user_id=${user_id} user_level=${user_level}`);
+  csrfToken = $('input[name ="csrfmiddlewaretoken"]')[0].value
+  $.ajax({
+      url: "/set_user_level_api",
+      type: "POST",
+      data: { 
+          "user_id":user_id, 
+          "user_level" : user_level, 
+          "csrfmiddlewaretoken" : csrfToken, 
+          },
+      cache:false,
+      dataType: "json",
+      success: function(resp){
+          console.log(`status:${resp.status} message:${resp.message}`)
+      }
+  });
+}
+$('.user_level_dropdown').change(set_user_level)
 </script>
 {% endblock %}
