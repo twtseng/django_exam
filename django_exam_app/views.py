@@ -83,7 +83,23 @@ def logout_user_api(request):
 
 def dashboard_view(request):
     if "logged_in_user" in request.session:
-        return render(request,"dashboard.html")
+        all_jobs = models.Job.objects.all()
+        everyones_jobs_data_columns=["Job","Location","Actions"]
+        everyones_jobs_data_rows = []
+        for job in all_jobs:
+            print(f"Job: {job}")
+            data_row = [
+                job.title,
+                job.location,
+                "view,remove,add,edit",
+            ]
+            everyones_jobs_data_rows.append(data_row)
+
+        context = {
+            'everyones_jobs_data_columns' : everyones_jobs_data_columns,
+            'everyones_jobs_data_rows' : everyones_jobs_data_rows,
+        }
+        return render(request,"dashboard.html", context)
     else:
         return redirect(reverse('signin_view'))
 
@@ -258,4 +274,15 @@ def add_job_api(request):
         except:
             response['status'] = "failed"
             response['message'] = str(sys.exc_info()[0])
-    return JsonResponse(response)   
+    return JsonResponse(response)
+
+def view_job_view(request, job_id):
+    if "logged_in_user" not in request.session:
+        return redirect(reverse('signin_view'))
+    logged_in_user = get_logged_in_user(request)
+    job = models.Job.objects.get(id=job_id)
+    context = {
+        'logged_in_user' : logged_in_user,
+        'job' : job,
+    }
+    return render(request,"view_job.html", context)
