@@ -90,9 +90,9 @@ def home_view(request):
 def user_level_control(value,is_admin,user_id):
     if is_admin:
         if value == "admin":
-            return f"<select class='user_level_dropdown' user_id='{user_id}'><option value='admin' selected>admin</option><option value='normal'>normal</option></select>"
+            return f"<select id='user_level' class='user_level_dropdown' user_id='{user_id}'><option value='admin' selected>admin</option><option value='normal'>normal</option></select>"
         else:
-            return f"<select class='user_level_dropdown' user_id='{user_id}'><option class='user_level_dropdown' value='admin'>admin</option><option value='normal' selected>normal</option></select>"
+            return f"<select id='user_level' class='user_level_dropdown' user_id='{user_id}'><option class='user_level_dropdown' value='admin'>admin</option><option value='normal' selected>normal</option></select>"
     else:
         return value
 
@@ -142,9 +142,14 @@ def delete_user(request, user_id):
         return redirect(reverse('signin_view'))    
 
 def edit_user_view(request, user_id):
+    if "logged_in_user" not in request.session:
+        return redirect(reverse('signin_view'))
+    logged_in_user = get_logged_in_user(request)
     user = models.User.objects.get(id=int(user_id))
+    user_level_control_html = user_level_control(user.user_level, logged_in_user.user_level == "admin", user.id)
     context = {
-        'user' : user
+        'user' : user,
+        'user_level_control_html' : user_level_control_html,
     }
     return render(request,"edit_user.html", context)
 
@@ -166,4 +171,46 @@ def set_user_level_api(request):
             response['status'] = "failed"
             response['message'] = str(sys.exc_info()[0])
     return JsonResponse(response)
+
+def edit_profile_api(request):
+    response = {
+        'status' : 'unknown',
+        'message' : 'unknown status'
+    }
+    if request.method == "POST":
+        try:
+            user_id = int(request.POST["user_id"])
+            user = models.User.objects.get(id=user_id)
+            user.first_name = request.POST["first_name"]
+            user.last_name = request.POST["last_name"]
+            user.email = request.POST["email"]
+            if request.POST["user_level"] > "":
+                user.user_level = request.POST["user_level"]
+            user.save()
+            response["status"] = "succeeded"
+            response["message"] = f"[{user.email}] updated with new profile info."
+        except:
+            response['status'] = "failed"
+            response['message'] = str(sys.exc_info()[0])
+    return JsonResponse(response)
+
+def update_password_api(request):
+    response = {
+        'status' : 'unknown',
+        'message' : 'unknown status'
+    }
+    if request.method == "POST":
+        try:
+            user_id = int(request.POST["user_id"])
+            user = models.User.objects.get(id=user_id)
+            password = request.POST["password"]
+            password_hash = bcrypt.hashpw(password.encode(), bcrypt.gensalt()).decode()
+            user.password_hash = password_hash
+            user.save()
+            response["status"] = "succeeded"
+            response["message"] = f"Password updated for [{user.email}]."
+        except:
+            response['status'] = "failed"
+            response['message'] = str(sys.exc_info()[0])
+    return JsonResponse(response)    
 

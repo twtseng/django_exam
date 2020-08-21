@@ -29,15 +29,17 @@
                 <label class="col-12 col-lg-3 p-0" for="email">Email</label>
                 <input class="col-12 col-lg-8" type="email" name="email" id="email" value="{{ user.email }}">
             </li>
+            {% if user_level_control_html != "" %}
             <li class="list-group-item d-flex flex-column flex-lg-row">
-                <label class="col-12 col-lg-3 p-0" for="email">User Level</label>
-                <input class="col-12 col-lg-8" type="email" name="email" id="email" value="{{ user.user_level }}">
+                <label class="col-12 col-lg-3 p-0" for="user_level">User Level</label>
+                {{ user_level_control_html | safe }}
             </li>
+            {% endif %}
         </ul>
         <div class="card-body">
-            <button id="edit_user_button" class="btn btn-primary col-6">Save</button>
+            <button id="edit_profile_button" class="btn btn-primary col-6">Save</button>
         </div>
-        <div id="edit_user_status" class="card-body">
+        <div id="edit_profile_status" class="card-body">
         </div>
     </div>
     <div class="card d-flex flex-column col-12 col-lg-5 p-0">
@@ -64,66 +66,95 @@
 {% endblock %}
 {% block script %}
 <script>
-    function register_user(first_name,last_name,email,password) {
+    function update_profile(user_id,first_name,last_name,email,user_level) {
         csrfToken = $('input[name ="csrfmiddlewaretoken"]')[0].value
         $.ajax({
-            url: "/register_user",
+            url: "/edit_profile_api",
             type: "POST",
             data: { 
+                "user_id":user_id, 
                 "first_name":first_name, 
                 "last_name" : last_name, 
                 "email" : email, 
-                "password" : password,
+                "user_level" : user_level,
                 "csrfmiddlewaretoken" : csrfToken, 
                 },
             cache:false,
             dataType: "json",
             success: function(resp){
-                $('#create_user_status').text(resp.message);
+                $('#edit_profile_status').html(resp.message);
                 if (resp.status == "succeeded") {
-                    $('#create_user_status').css("color","green")
+                    $('#edit_profile_status').css('color','green');
                 } else {
-                    $('#create_user_status').css("color","red")
+                    $('#edit_profile_status').css('color','red');
                 }
             }
         });
     }
-    function validateRegistrationFields(first_name,last_name,email,password,confirm_password) {
+    function edit_profile() {
+        user_id = {{ user.id }};
+        first_name = $("#first_name").val();
+        last_name = $("#last_name").val();
+        email = $("#email").val();
+        user_level = $('#user_level').val();
+        if (user_level == undefined) {
+            user_level = ""
+        }
+        // password = $("#password").val()
+        // confirm_password = $("#confirm_password").val()
         validation_errors = ''
-        if (first_name.length < 2) {
-            validation_errors += "First name must be at least 2 chars<br>"
-        }
-        if (last_name.length < 2) {
-            validation_errors += "Last name must be at least 2 chars<br>"
-        }
-        const re = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
-        if (!re.test(String(email).toLowerCase())) {
-            validation_errors += "Invalid email address<br>"
-        }
-        if (password.length < 8) {
-            validation_errors += "Password must be at least 8 chars<br>"
-        } else if (password != confirm_password) {
-            validation_errors += "Passwords do not match"
-        }
+        validation_errors += validate_first_name(first_name);
+        validation_errors += validate_last_name(last_name);
+        validation_errors += validate_email(email);
+
         if (validation_errors.length > 0) {
-            $('#status').html(validation_errors);
-            $('#status').css('color','red');
+            $('#edit_profile_status').html(validation_errors);
+            $('#edit_profile_status').css('color','red');
             return false;
         } else {
-            $('#status').html('');
-            return true;
-        }        
-    }
-    function update() {
-        first_name = $("#first_name").val()
-        last_name = $("#last_name").val()
-        email = $("#email").val()
-        password = $("#password").val()
-        confirm_password = $("#confirm_password").val()
-        if (validateRegistrationFields(first_name,last_name,email,password,confirm_password)) {
-            register_user(first_name,last_name,email,password)
+            console.log(`edit_profile user_id:${user_id} first_name:${first_name} last_name:${last_name} email:${email} user_level:${user_level}`);
+            update_profile(user_id,first_name,last_name,email,user_level);
         }
     }
-    $('#edit_user_button').click(register)
+    $('#edit_profile_button').click(edit_profile)
+    function update_password(user_id, password) {
+        csrfToken = $('input[name ="csrfmiddlewaretoken"]')[0].value
+        $.ajax({
+            url: "/update_password_api",
+            type: "POST",
+            data: { 
+                "user_id":user_id, 
+                "password":password, 
+                "csrfmiddlewaretoken" : csrfToken, 
+                },
+            cache:false,
+            dataType: "json",
+            success: function(resp){
+                $('#update_password_status').html(resp.message);
+                if (resp.status == "succeeded") {
+                    $('#update_password_status').css('color','green');
+                } else {
+                    $('#update_password_status').css('color','red');
+                }
+            }
+        });
+    }
+    function edit_password() {
+        user_id = {{ user.id }};
+ 
+        password = $("#password").val()
+        confirm_password = $("#confirm_password").val()
+        validation_errors = ''
+        validation_errors += validate_password(password, confirm_password);
+        if (validation_errors.length > 0) {
+            $('#update_password_status').html(validation_errors);
+            $('#update_password_status').css('color','red');
+            return false;
+        } else {
+            console.log(`edit_password user_id:${user_id}`);
+            update_password(user_id,password);
+        }
+    }
+    $('#update_password_button').click(edit_password)
 </script>
 {% endblock %}
