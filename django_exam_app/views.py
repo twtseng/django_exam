@@ -230,6 +230,13 @@ def add_job_api(request):
     if request.method == "POST":
         print(f"in add_job_api POST block")
         try:
+            # Add add_category (if needed)
+            add_category = request.POST["add_category"]
+            if add_category > " ":
+                if not models.JobCategory.objects.filter(category__iexact=add_category).exists():
+                    models.JobCategory.objects.create(category=add_category)
+                print(f"Added new category: {add_category}")
+
             job_title = request.POST["job_title"]
             job_description = request.POST["job_description"]
             job_location = request.POST["job_location"]
@@ -250,7 +257,7 @@ def add_job_api(request):
                 if (job_categories_string > " "):
                     job_categories = job_categories_string.split(",")
                     for cat in models.JobCategory.objects.all():
-                        if cat.category in job_categories:
+                        if cat.category in job_categories or cat.category==add_category:
                             print(f"Adding category [{cat.category}]")
                             job.categories.add(cat)
                         job.save()

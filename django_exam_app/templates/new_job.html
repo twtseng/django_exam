@@ -33,6 +33,10 @@
                         {% endfor %}
                     </div>
                 </li>
+                <li class="list-group-item d-flex flex-column flex-lg-row">
+                    <label class="col-12 col-lg-3 p-0" for="add_category">Add category</label>
+                    <input class="col-12 col-lg-8" type="text" name="add_category" id="add_category" value="">
+                </li>
             </ul>
             <div class="card-body">
                 <button id="cancel_button" class="btn btn-primary col-6">Cancel</button>
@@ -48,7 +52,7 @@
 {% endblock %}
 {% block script %}
 <script>
-    function call_add_job_api(job_title,job_description,job_location,job_categories) {
+    function call_add_job_api(job_title,job_description,job_location,job_categories, add_category) {
         csrfToken = $('input[name ="csrfmiddlewaretoken"]')[0].value
         $.ajax({
             url: "/add_job_api",
@@ -58,6 +62,7 @@
                 "job_description" : job_description, 
                 "job_location" : job_location, 
                 "job_categories_string" : job_categories_string,
+                "add_category" : add_category,
                 "csrfmiddlewaretoken" : csrfToken, 
                 },
             cache:false,
@@ -76,6 +81,7 @@
         job_title = $("#title").val();
         job_description = $("#description").val();
         job_location = $("#location").val();
+        add_category = $("#add_category").val();
         job_categories = [];
         $('.job_category_checkbox').each(
             function() {
@@ -86,8 +92,8 @@
             }
         )
         job_categories_string = job_categories.join(",")
-        console.log(`job_title: ${job_title} job_description:${job_description} job_location:${job_location} job_categories:${job_categories}`)
-        call_add_job_api(job_title,job_description,job_location,job_categories_string);
+        console.log(`job_title: ${job_title} job_description:${job_description} job_location:${job_location} job_categories:${job_categories} add_category:${add_category}`)
+        call_add_job_api(job_title,job_description,job_location,job_categories_string, add_category);
     }
     $('#add_job_button').click(add_job)
 </script>
