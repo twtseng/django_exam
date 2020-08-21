@@ -29,7 +29,27 @@
         {% endfor %}
       </tbody>
     </table>
-
+  </div>
+    <div class="container">
+    <h1>My Jobs</h1>
+    <table class="table table-striped">
+      <thead>
+        <tr>
+          {% for col in my_jobs_data_columns %}
+          <th scope="col">{{ col | safe }}</th>
+          {% endfor %}
+        </tr>
+      </thead>
+      <tbody>
+        {% for row in my_jobs_data_rows %}
+        <tr>
+          {% for col in row %}
+          <td>{{ col | safe }}</td>
+          {% endfor %}
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
   </div>
 </div>
 {% endblock %}

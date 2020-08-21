@@ -263,21 +263,36 @@ def add_job_api(request):
 
 def dashboard_view(request):
     if "logged_in_user" in request.session:
+        logged_in_user = get_logged_in_user(request)
         all_jobs = models.Job.objects.all()
-        everyones_jobs_data_columns=["Job","Location","Actions"]
+        everyones_jobs_data_columns=["Job","Location","Creator","Actions"]
         everyones_jobs_data_rows = []
+        my_jobs_data_columns=["Job","Actions"]
+        my_jobs_data_rows = []
         for job in all_jobs:
-            print(f"Job: {job}")
+            actions=f"<a href='../jobs/{job.id}'>View</a>"
+            actions += f" | <a href='../jobs/remove/{job.id}'>Remove</a>"
+            actions += f" | <a href='../jobs/edit/{job.id}'>Edit</a>"
+            actions += f" | <a href='../jobs/add_job_to_user/{job.id}'>Add job to me</a>"
+            actions += f" | <a href='../jobs/remove_job_from_user/{job.id}'>Remove job from me</a>"
             data_row = [
                 job.title,
                 job.location,
-                "view,remove,add,edit",
+                job.created_by.email,
+                actions,
             ]
             everyones_jobs_data_rows.append(data_row)
 
+            if job in logged_in_user.jobs.all():
+                myactions=f"<a href='../jobs/{job.id}'>View</a>"
+                myactions += f" | <a href='../jobs/remove/{job.id}'>Done</a>"
+                myactions += f" | <a href='../jobs/remove_job_from_user/{job.id}'>Give up</a>"
+                my_jobs_data_rows.append([job.title, myactions])
         context = {
             'everyones_jobs_data_columns' : everyones_jobs_data_columns,
             'everyones_jobs_data_rows' : everyones_jobs_data_rows,
+            'my_jobs_data_columns' : my_jobs_data_columns,
+            'my_jobs_data_rows' : my_jobs_data_rows
         }
         return render(request,"dashboard.html", context)
     else:
@@ -295,3 +310,25 @@ def view_job_view(request, job_id):
         'categories' : job.categories.all(),
     }
     return render(request,"view_job.html", context)
+
+def remove_job(request, job_id):
+    if "logged_in_user" in request.session:
+        job = models.Job.objects.get(id = job_id)
+        job.delete()
+    return redirect(reverse('dashboard_view'))
+
+def add_job_to_user(request, job_id):
+    if "logged_in_user" in request.session:
+        logged_in_user = get_logged_in_user(request)
+        job = models.Job.objects.get(id = job_id)
+        if job not in logged_in_user.jobs.all():
+            logged_in_user.jobs.add(job)
+    return redirect(reverse('dashboard_view'))
+
+def remove_job_from_user(request, job_id):
+    if "logged_in_user" in request.session:
+        logged_in_user = get_logged_in_user(request)
+        job = models.Job.objects.get(id = job_id)
+        if job in logged_in_user.jobs.all():
+            logged_in_user.jobs.remove(job)
+    return redirect(reverse('dashboard_view'))
