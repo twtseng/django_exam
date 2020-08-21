@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+
+{% block title %}User Dashboard Home{% endblock %}
+{% block navbar_menuitems %}
+<li class="nav-item">
+    <a class="nav-link" href="/">Home</a>
+</li>
+<li class="nav-item">
+    <a class="nav-link" href="/dashboard">Dashboard</a>
+</li>
+{% endblock %}
+{% block content %}
+<div class="jumbotron">
+    <div class="container">
+      <h1 class="display-3">Welcome to the Test</h1>
+      <p>We're going to build a cool application blah blah blah Village88 folks!</p>
+      <p><a class="btn btn-primary btn-lg" href="#" role="button">Start &raquo;</a></p>
+    </div>
+  </div>
+
+  <div class="container">
+    <!-- Example row of columns -->
+    <div class="row">
+      <div class="col-md-4">
+        <h2>Manage Users</h2>
+        <p>Using this application you'll learn how to add remove and edit users for the application </p>
+        <p><a class="btn btn-secondary" href="/dashboard/admin" role="button">Manage Users &raquo;</a></p>
+      </div>
+      <div class="col-md-4">
+        <h2>Leave messages</h2>
+        <p>Users will be able to leave messages for other users! Woo hoo!</p>
+        <p><a class="btn btn-secondary" href="#" role="button">Leave Messages &raquo;</a></p>
+      </div>
+      <div class="col-md-4">
+        <h2>Edit User Information</h2>
+        <p>Admins will be able to edit another user's information. AWESOME!!!!</p>
+        <p><a class="btn btn-secondary" href="#" role="button">Edit user info &raquo;</a></p>
+      </div>
+    </div>
+
+    <hr>
+
+  </div> <!-- /container -->
+{% endblock %}
+{% block script %}
+<script>
+ 
+</script>
+{% endblock %}

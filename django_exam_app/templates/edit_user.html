@@ -1,0 +1,129 @@
+{% extends "base.html" %}
+
+{% block title %}Login and Registration{% endblock %}
+{% block navbar_menuitems %}
+<li class="nav-item">
+    <a class="nav-link" href="/">Home</a>
+</li>
+<li class="nav-item">
+    <a class="nav-link" href="/dashboard">Dashboard</a>
+</li>
+{% endblock %}
+{% block content %}
+<div class="jumbotron p-5 d-flex flex-column flex-lg-row justify-content-around">
+        {% csrf_token %}
+    <div class="card d-flex flex-column col-12 col-lg-5 p-0">
+        <div class="card-body">
+            <h1 class="card-title">Edit Profile</h1>
+        </div>
+        <ul class="list-group list-group-flush">
+            <li class="list-group-item d-flex flex-column flex-lg-row">
+                <label class="col-12 col-lg-3 p-0" for="first_name">First Name</label>
+                <input class="col-12 col-lg-8" type="text" name="first_name" id="first_name" value="{{ user.first_name }}">
+            </li>
+            <li class="list-group-item d-flex flex-column flex-lg-row">
+                <label class="col-12 col-lg-3 p-0" for="last_name">Last Name</label>
+                <input class="col-12 col-lg-8" type="text" name="last_name" id="last_name" value="{{ user.last_name }}">
+            </li>
+            <li class="list-group-item d-flex flex-column flex-lg-row">
+                <label class="col-12 col-lg-3 p-0" for="email">Email</label>
+                <input class="col-12 col-lg-8" type="email" name="email" id="email" value="{{ user.email }}">
+            </li>
+            <li class="list-group-item d-flex flex-column flex-lg-row">
+                <label class="col-12 col-lg-3 p-0" for="email">User Level</label>
+                <input class="col-12 col-lg-8" type="email" name="email" id="email" value="{{ user.user_level }}">
+            </li>
+        </ul>
+        <div class="card-body">
+            <button id="edit_user_button" class="btn btn-primary col-6">Save</button>
+        </div>
+        <div id="edit_user_status" class="card-body">
+        </div>
+    </div>
+    <div class="card d-flex flex-column col-12 col-lg-5 p-0">
+        <div class="card-body">
+            <h1 class="card-title">Change Password</h1>
+        </div>
+        <ul class="list-group list-group-flush">
+            <li class="list-group-item d-flex flex-column flex-lg-row">
+                <label class="col-12 col-lg-3 p-0" for="password">Password</label>
+                <input class="col-12 col-lg-8" type="password" name="password" id="password" value="12345">
+            </li>
+            <li class="list-group-item d-flex flex-column flex-lg-row">
+                <label class="col-12 col-lg-3 p-0" for="confirm_password">Confirm PW</label>
+                <input class="col-12 col-lg-8" type="password" name="confirm_password" id="confirm_password" value="54321">
+            </li>
+        </ul>
+        <div class="card-body">
+            <button id="update_password_button" class="btn btn-primary col-6">Update Password</button>
+        </div>
+        <div id="update_password_status" class="card-body">
+        </div>
+    </div>
+</div>
+{% endblock %}
+{% block script %}
+<script>
+    function register_user(first_name,last_name,email,password) {
+        csrfToken = $('input[name ="csrfmiddlewaretoken"]')[0].value
+        $.ajax({
+            url: "/register_user",
+            type: "POST",
+            data: { 
+                "first_name":first_name, 
+                "last_name" : last_name, 
+                "email" : email, 
+                "password" : password,
+                "csrfmiddlewaretoken" : csrfToken, 
+                },
+            cache:false,
+            dataType: "json",
+            success: function(resp){
+                $('#create_user_status').text(resp.message);
+                if (resp.status == "succeeded") {
+                    $('#create_user_status').css("color","green")
+                } else {
+                    $('#create_user_status').css("color","red")
+                }
+            }
+        });
+    }
+    function validateRegistrationFields(first_name,last_name,email,password,confirm_password) {
+        validation_errors = ''
+        if (first_name.length < 2) {
+            validation_errors += "First name must be at least 2 chars<br>"
+        }
+        if (last_name.length < 2) {
+            validation_errors += "Last name must be at least 2 chars<br>"
+        }
+        const re = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+        if (!re.test(String(email).toLowerCase())) {
+            validation_errors += "Invalid email address<br>"
+        }
+        if (password.length < 8) {
+            validation_errors += "Password must be at least 8 chars<br>"
+        } else if (password != confirm_password) {
+            validation_errors += "Passwords do not match"
+        }
+        if (validation_errors.length > 0) {
+            $('#status').html(validation_errors);
+            $('#status').css('color','red');
+            return false;
+        } else {
+            $('#status').html('');
+            return true;
+        }        
+    }
+    function update() {
+        first_name = $("#first_name").val()
+        last_name = $("#last_name").val()
+        email = $("#email").val()
+        password = $("#password").val()
+        confirm_password = $("#confirm_password").val()
+        if (validateRegistrationFields(first_name,last_name,email,password,confirm_password)) {
+            register_user(first_name,last_name,email,password)
+        }
+    }
+    $('#edit_user_button').click(register)
+</script>
+{% endblock %}

@@ -1,0 +1,162 @@
+{% extends "base.html" %}
+
+{% block title %}Login and Registration{% endblock %}
+
+{% block content %}
+<div class="jumbotron p-5 d-flex flex-column flex-lg-row justify-content-around">
+    <div class="d-flex flex-column col-12 col-lg-5 p-0">
+        {% csrf_token %}
+        <div class="card">
+            <div class="card-body">
+                <h1 class="card-title">Registration</h1>
+            </div>
+            <ul class="list-group list-group-flush">
+                <li class="list-group-item d-flex flex-column flex-lg-row">
+                    <label class="col-12 col-lg-3 p-0" for="registration_first_name">First Name</label>
+                    <input class="col-12 col-lg-8" type="text" name="first_name" id="registration_first_name" value="">
+                </li>
+                <li class="list-group-item d-flex flex-column flex-lg-row">
+                    <label class="col-12 col-lg-3 p-0" for="registration_last_name">Last Name</label>
+                    <input class="col-12 col-lg-8" type="text" name="last_name" id="registration_last_name" value="">
+                </li>
+                <li class="list-group-item d-flex flex-column flex-lg-row">
+                    <label class="col-12 col-lg-3 p-0" for="registration_email">Email</label>
+                    <input class="col-12 col-lg-8" type="email" name="email" id="registration_email" value="">
+                </li>
+                <li class="list-group-item d-flex flex-column flex-lg-row">
+                    <label class="col-12 col-lg-3 p-0" for="registration_password">Password</label>
+                    <input class="col-12 col-lg-8" type="password" name="password" id="registration_password" value="">
+                </li>
+                <li class="list-group-item d-flex flex-column flex-lg-row">
+                    <label class="col-12 col-lg-3 p-0" for="registration_confirm_password">Confirm PW</label>
+                    <input class="col-12 col-lg-8" type="password" name="confirm_password" id="registration_confirm_password" value="">
+                </li>
+            </ul>
+            <div class="card-body">
+                <button id="register_button" class="btn btn-primary col-6">Register</button>
+            </div>
+            <div id="registration_status" class="card-body">
+            </div>
+        </div>
+    </div>
+    <div class="d-flex flex-column col-12 col-lg-5 p-0">
+        {% csrf_token %}
+        <div class="card">
+            <div class="card-body">
+                <h1 class="card-title">Login</h1>
+            </div>
+            <ul class="list-group list-group-flush">
+                <li class="list-group-item d-flex flex-column flex-lg-row">
+                    <label class="col-12 col-lg-3 p-0" for="login_email">Email</label>
+                    <input class="col-12 col-lg-8" type="email" name="email" id="login_email" value="">
+                </li>
+                <li class="list-group-item d-flex flex-column flex-lg-row">
+                    <label class="col-12 col-lg-3 p-0" for="login_password">Password</label>
+                    <input class="col-12 col-lg-8" type="password" name="password" id="login_password" value="">
+                </li>
+            </ul>
+            <div class="card-body">
+                <button id="login_button" class="btn btn-primary col-6">Login</button>
+            </div>
+            <div id="login_status" class="card-body">
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+{% block script %}
+<script>
+    function register_user(first_name,last_name,email,password) {
+        csrfToken = $('input[name ="csrfmiddlewaretoken"]')[0].value
+        $.ajax({
+            url: "/register_user_api",
+            type: "POST",
+            data: { 
+                "first_name":first_name, 
+                "last_name" : last_name, 
+                "email" : email, 
+                "password" : password,
+                "csrfmiddlewaretoken" : csrfToken, 
+                },
+            cache:false,
+            dataType: "json",
+            success: function(resp){
+                $('#registration_status').text(resp.message);
+                if (resp.status == "succeeded") {
+                    $('#registration_status').css("color","green")
+                } else {
+                    $('#registration_status').css("color","red")
+                }
+            }
+        });
+    }
+    function validateRegistrationFields(first_name,last_name,email,password,confirm_password) {
+        validation_errors = ''
+        if (first_name.length < 2) {
+            validation_errors += "First name must be at least 2 chars<br>"
+        }
+        if (last_name.length < 2) {
+            validation_errors += "Last name must be at least 2 chars<br>"
+        }
+        const re = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+        if (!re.test(String(email).toLowerCase())) {
+            validation_errors += "Invalid email address<br>"
+        }
+        if (password.length < 8) {
+            validation_errors += "Password must be at least 8 chars<br>"
+        } else if (password != confirm_password) {
+            validation_errors += "Passwords do not match"
+        }
+        if (validation_errors.length > 0) {
+            $('#registration_status').html(validation_errors);
+            $('#registration_status').css('color','red');
+            return false;
+        } else {
+            $('#registration_status').html('');
+            return true;
+        }        
+    }
+    function register() {
+        first_name = $("#registration_first_name").val()
+        last_name = $("#registration_last_name").val()
+        email = $("#registration_email").val()
+        password = $("#registration_password").val()
+        confirm_password = $("#registration_confirm_password").val()
+        if (validateRegistrationFields(first_name,last_name,email,password,confirm_password)) {
+            register_user(first_name,last_name,email,password)
+        }
+    }
+    $('#register_button').click(register)
+    function login_user() {
+        email = $("#login_email").val()
+        password = $("#login_password").val()
+        csrfToken = $('input[name ="csrfmiddlewaretoken"]')[0].value
+        $.ajax({
+            url: "/login_user_api",
+            type: "POST",
+            data: { 
+                "email" : email, 
+                "password" : password,
+                "csrfmiddlewaretoken" : csrfToken, 
+                },
+            cache:false,
+            dataType: "json",
+            success: function(resp){
+                if (resp.status == "succeeded") {
+                    $('#login_status').text("");
+                    window.location.replace("/signin")
+                } else {
+                    $('#login_status').text(resp.message);
+                    $('#login_status').css("color","red")
+                }
+            }
+        });
+    }
+    $('#login_button').click(login_user)
+    $('#login_password').keypress(function(event) {
+        if (event.which == 13) {
+            login_user();
+        }
+    })
+</script>
+{% endblock %}
