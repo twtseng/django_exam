@@ -341,3 +341,77 @@ def remove_job_from_user(request, job_id):
         if job in logged_in_user.jobs.all():
             logged_in_user.jobs.remove(job)
     return redirect(reverse('dashboard_view'))
+
+def edit_job_view(request, job_id):
+    if "logged_in_user" not in request.session:
+        return redirect(reverse('signin_view'))
+    logged_in_user = get_logged_in_user(request)
+    job = models.Job.objects.get(id=job_id)
+    created_by_me = job.created_by == logged_in_user
+    in_my_jobs = job in logged_in_user.jobs.all()
+
+    categories = []
+    for cat in models.JobCategory.objects.all():
+        is_selected = cat in job.categories.all()
+        categories.append(
+            {
+                'category' : cat.category,
+                'is_selected' : is_selected
+            }
+        )
+
+    context = {
+        'job_id' : job.id,
+        'title' : job.title,
+        'description' : job.description,
+        'location' : job.location,
+        'categories' : categories,
+        'in_my_jobs' : in_my_jobs,
+        'created_by_me' : created_by_me,
+    }
+    return render(request,"edit_job.html", context)
+
+def update_job_api(request):
+    user = get_logged_in_user(request)
+    print(f"in update_job_api, user {user}")
+    print(request)
+    response = {
+        'status' : 'unknown',
+        'message' : 'unknown status'
+    }
+    if request.method == "POST":
+        print(f"in update_job_api POST block")
+        try:
+            job_id = int(request.POST["job_id"])
+            job_title = request.POST["job_title"]
+            job_description = request.POST["job_description"]
+            job_location = request.POST["job_location"]
+            validation_errors = models.Job.objects.validate(job_title, job_description, job_location)
+            print(f"validation_errors: {validation_errors}")
+            if len(validation_errors)>0:
+                print(f"validation_errors found")
+                error_string = ",".join(validation_errors)
+                response['status'] = "failed"
+                response['message'] = error_string
+            else:
+                print(f"Calling job get for job_id:{job_id}")
+                job = models.Job.objects.get(id = job_id)
+                print(f"in update_job_api POST block, updating job: {job}")
+                job.title = job_title
+                job.description = job_description
+                job.location = job_location
+                job.save()
+                job_categories_string = request.POST["job_categories_string"]
+                if (job_categories_string > " "):
+                    job_categories = job_categories_string.split(",")
+                    for cat in models.JobCategory.objects.all():
+                        if cat.category in job_categories:
+                            print(f"Adding category [{cat.category}]")
+                            job.categories.add(cat)
+                        job.save()
+                response["status"] = "succeeded"
+                response["message"] = f"Updated Job with Title=[{job_title}]."
+        except:
+            response['status'] = "failed"
+            response['message'] = str(sys.exc_info()[0])
+    return JsonResponse(response)

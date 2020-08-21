@@ -1,0 +1,95 @@
+{% extends "base.html" %}
+
+{% block title %}Login and Registration{% endblock %}
+{% block navbar_menuitems %}
+{% endblock %}
+{% block content %}
+<div class="jumbotron p-5 d-flex flex-column flex-lg-row justify-content-around">
+    <div class="d-flex flex-column col-12 col-lg-5 p-0">
+        {% csrf_token %}
+        <div class="card">
+            <div class="card-body">
+                <h1 class="card-title">Edit Job</h1>
+            </div>
+            <ul class="list-group list-group-flush">
+                <li class="list-group-item d-flex flex-column flex-lg-row">
+                    <label class="col-12 col-lg-3 p-0" for="title">Title</label>
+                    <input class="col-12 col-lg-8" type="text" name="title" id="title" value="{{ title }}">
+                </li>
+                <li class="list-group-item d-flex flex-column flex-lg-row">
+                    <label class="col-12 col-lg-3 p-0" for="description">Description</label>
+                    <input class="col-12 col-lg-8" type="text" name="description" id="description" value="{{ description }}">
+                </li>
+                <li class="list-group-item d-flex flex-column flex-lg-row">
+                    <label class="col-12 col-lg-3 p-0" for="location">Location</label>
+                    <input class="col-12 col-lg-8" type="text" name="location" id="location" value="{{ location }}">
+                </li>
+                <li class="list-group-item d-flex flex-column flex-lg-row">
+                    <label class="col-12 col-lg-3 p-0" for="categories">Categories</label>
+                    <div id="category_checkboxes">
+                        {% for cat in categories %}
+                        <input type="checkbox" class="job_category_checkbox" id="{{ cat.category }}" name="{{ cat.category }}" {% if cat.is_selected %}checked{% endif %}>
+                        <label for="{{ cat.category }}">{{ cat.category }}</label><br>
+                        {% endfor %}
+                    </div>
+                </li>
+            </ul>
+            <div class="card-body">
+                <button id="cancel_button" class="btn btn-primary col-6">Cancel</button>
+            </div>
+            <div class="card-body">
+                <button id="update_job_button" class="btn btn-primary col-6">Update Job</button>
+            </div>
+            <div id="update_job_status" class="card-body">
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+{% block script %}
+<script>
+    function call_update_job_api(job_title,job_description,job_location,job_categories) {
+        csrfToken = $('input[name ="csrfmiddlewaretoken"]')[0].value
+        $.ajax({
+            url: "/update_job_api",
+            type: "POST",
+            data: {
+                "job_id" : {{job_id}},
+                "job_title":job_title, 
+                "job_description" : job_description, 
+                "job_location" : job_location, 
+                "job_categories_string" : job_categories_string,
+                "csrfmiddlewaretoken" : csrfToken, 
+                },
+            cache:false,
+            dataType: "json",
+            success: function(resp){
+                $('#update_job_status').text(resp.message);
+                if (resp.status == "succeeded") {
+                    $('#update_job_status').css("color","green")
+                } else {
+                    $('#update_job_status').css("color","red")
+                }
+            }
+        });
+    }
+    function update_job() {
+        job_title = $("#title").val();
+        job_description = $("#description").val();
+        job_location = $("#location").val();
+        job_categories = [];
+        $('.job_category_checkbox').each(
+            function() {
+                if ($(this).prop('checked')) {
+                    category = $(this).val()
+                    job_categories.push(category);
+                }
+            }
+        )
+        job_categories_string = job_categories.join(",")
+        console.log(`job_title: ${job_title} job_description:${job_description} job_location:${job_location} job_categories:${job_categories}`)
+        call_update_job_api(job_title,job_description,job_location,job_categories_string);
+    }
+    $('#update_job_button').click(update_job)
+</script>
+{% endblock %}
