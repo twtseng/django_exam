@@ -9,7 +9,9 @@
 {% block content %}
 <div class="jumbotron">
     <div class="container">
+      {% if user_level == "admin" %}
       <h1 class="display-3">Manage Users</h1><a class="btn btn-primary btn-lg" href="/users/new" role="button">Add new &raquo;</a>
+      {% endif %}
       {% for col in data_columns %}
       {% endfor %}
       <table class="table table-striped">

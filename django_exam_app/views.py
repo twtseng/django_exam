@@ -115,7 +115,8 @@ def manage_users_view(request):
 
     context = {
         'data_columns' : data_columns,
-        'data_rows' : data_rows
+        'data_rows' : data_rows,
+        'user_level' : logged_in_user.user_level,
     }
     
     if "logged_in_user" in request.session:
