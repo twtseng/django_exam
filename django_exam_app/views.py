@@ -81,28 +81,6 @@ def logout_user_api(request):
     request.session.clear()
     return redirect(reverse('signin_view'))
 
-def dashboard_view(request):
-    if "logged_in_user" in request.session:
-        all_jobs = models.Job.objects.all()
-        everyones_jobs_data_columns=["Job","Location","Actions"]
-        everyones_jobs_data_rows = []
-        for job in all_jobs:
-            print(f"Job: {job}")
-            data_row = [
-                job.title,
-                job.location,
-                "view,remove,add,edit",
-            ]
-            everyones_jobs_data_rows.append(data_row)
-
-        context = {
-            'everyones_jobs_data_columns' : everyones_jobs_data_columns,
-            'everyones_jobs_data_rows' : everyones_jobs_data_rows,
-        }
-        return render(request,"dashboard.html", context)
-    else:
-        return redirect(reverse('signin_view'))
-
 def user_level_control(value,is_admin,user_id):
     if is_admin:
         if value == "admin":
@@ -255,26 +233,55 @@ def add_job_api(request):
             job_title = request.POST["job_title"]
             job_description = request.POST["job_description"]
             job_location = request.POST["job_location"]
-            job = models.Job.objects.create(
-                title=job_title,
-                description=job_description,
-                location=job_location,
-                created_by=user
-            )
-            job_categories_string = request.POST["job_categories_string"]
-            if (job_categories_string > " "):
-                job_categories = job_categories_string.split(",")
-                for cat in models.JobCategory.objects.all():
-                    if cat.category in job_categories:
-                        print(f"Adding category [{cat.category}]")
-                        job.categories.add(cat)
-                    job.save()
-            response["status"] = "succeeded"
-            response["message"] = f"Created Job with Title=[{job_title}]."
+            validation_errors = models.Job.objects.validate(job_title, job_description, job_location)
+            print(f"validation_errors: {validation_errors}")
+            if len(validation_errors)>0:
+                error_string = ",".join(validation_errors)
+                response['status'] = "failed"
+                response['message'] = error_string
+            else:
+                job = models.Job.objects.create(
+                    title=job_title,
+                    description=job_description,
+                    location=job_location,
+                    created_by=user
+                )
+                job_categories_string = request.POST["job_categories_string"]
+                if (job_categories_string > " "):
+                    job_categories = job_categories_string.split(",")
+                    for cat in models.JobCategory.objects.all():
+                        if cat.category in job_categories:
+                            print(f"Adding category [{cat.category}]")
+                            job.categories.add(cat)
+                        job.save()
+                response["status"] = "succeeded"
+                response["message"] = f"Created Job with Title=[{job_title}]."
         except:
             response['status'] = "failed"
             response['message'] = str(sys.exc_info()[0])
     return JsonResponse(response)
+
+def dashboard_view(request):
+    if "logged_in_user" in request.session:
+        all_jobs = models.Job.objects.all()
+        everyones_jobs_data_columns=["Job","Location","Actions"]
+        everyones_jobs_data_rows = []
+        for job in all_jobs:
+            print(f"Job: {job}")
+            data_row = [
+                job.title,
+                job.location,
+                "view,remove,add,edit",
+            ]
+            everyones_jobs_data_rows.append(data_row)
+
+        context = {
+            'everyones_jobs_data_columns' : everyones_jobs_data_columns,
+            'everyones_jobs_data_rows' : everyones_jobs_data_rows,
+        }
+        return render(request,"dashboard.html", context)
+    else:
+        return redirect(reverse('signin_view'))
 
 def view_job_view(request, job_id):
     if "logged_in_user" not in request.session:
@@ -282,7 +289,9 @@ def view_job_view(request, job_id):
     logged_in_user = get_logged_in_user(request)
     job = models.Job.objects.get(id=job_id)
     context = {
-        'logged_in_user' : logged_in_user,
-        'job' : job,
+        'title' : job.title,
+        'description' : job.description,
+        'location' : job.location,
+        'categories' : job.categories.all(),
     }
     return render(request,"view_job.html", context)

@@ -2,13 +2,10 @@
 
 {% block title %}View Job{% endblock %}
 {% block navbar_menuitems %}
-<li class="nav-item">
-    <a class="nav-link" href="/dashboard">Home</a>
-</li>
 {% endblock %}
 {% block content %}
 <div class="jumbotron p-5 d-flex flex-column flex-lg-row justify-content-around">
-    <div class="d-flex flex-column col-12 col-lg-5 p-0">
+    <div class="d-flex flex-column col-12 col-lg-8 p-0">
         {% csrf_token %}
         <div class="card">
             <div class="card-body">
@@ -17,23 +14,21 @@
             <ul class="list-group list-group-flush">
                 <li class="list-group-item d-flex flex-column flex-lg-row">
                     <label class="col-12 col-lg-3 p-0" for="title">Title</label>
-                    <input class="col-12 col-lg-8" type="text" name="title" id="title" value="{{ job.title }}">
+                    <input class="col-12 col-lg-8" type="text" name="title" id="title" disabled value="{{ title }}">
                 </li>
                 <li class="list-group-item d-flex flex-column flex-lg-row">
                     <label class="col-12 col-lg-3 p-0" for="description">Description</label>
-                    <input class="col-12 col-lg-8" type="text" name="description" id="description" value="{{ job.description }}">
+                    <input class="col-12 col-lg-8" type="text" name="description" id="description" disabled value="{{ description }}">
                 </li>
                 <li class="list-group-item d-flex flex-column flex-lg-row">
                     <label class="col-12 col-lg-3 p-0" for="location">Location</label>
-                    <input class="col-12 col-lg-8" type="text" name="location" id="location" value="{{ job.location }}">
+                    <input class="col-12 col-lg-8" type="text" name="location" id="location" disabled value="{{ location }}">
                 </li>
-                <li class="list-group-item d-flex flex-column flex-lg-row">
-                    <label class="col-12 col-lg-3 p-0" for="categories">Categories</label>
-                    <div id="category_checkboxes">
-                        {% for cat in job.categories %}
-                        <p>{{ cat.category }}</p>
-                        {% endfor %}
-                    </div>
+                <li class="list-group-item d-flex flex-column">
+                    <h5>Categories</h5>
+                    {% for cat in categories %}
+                    <p>{{ cat.category }}</p>
+                    {% endfor %}
                 </li>
             </ul>
             <div class="card-body">
