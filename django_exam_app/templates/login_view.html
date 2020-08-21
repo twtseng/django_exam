@@ -133,7 +133,7 @@
             success: function(resp){
                 if (resp.status == "succeeded") {
                     $('#login_status').text("");
-                    window.location.replace("/signin")
+                    window.location.replace("/dashboard")
                 } else {
                     $('#login_status').text(resp.message);
                     $('#login_status').css("color","red")

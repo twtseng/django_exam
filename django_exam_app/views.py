@@ -24,7 +24,7 @@ def signin_view(request):
     if logged_in_user == None:
         return render(request,'login_view.html')
     else:
-        return redirect(reverse('home_view'))
+        return redirect(reverse('dashboard_view'))
 
 def register_user_api(request):
     response = {
@@ -81,9 +81,9 @@ def logout_user_api(request):
     request.session.clear()
     return redirect(reverse('signin_view'))
 
-def home_view(request):
+def dashboard_view(request):
     if "logged_in_user" in request.session:
-        return render(request,"home_view.html")
+        return render(request,"dashboard.html")
     else:
         return redirect(reverse('signin_view'))
 

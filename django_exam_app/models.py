@@ -1,9 +1,18 @@
 from django.db import models
 
-# Create your models here.
-from django.db import models
+class JobCategoryManager(models.Manager):
+    def validate(self, category):
+        validation_errors = []
+        if self.filter(category__iexact=category).exists():    
+            validation_errors.append(f"Category [{category}] already exists")
+        if len(category) < 2:
+            validation_errors.append(f"Category must be at least 2 chars")
+        return validation_errors
 
-# Create your models here.
+class JobCategory(models.Model):
+    category = models.CharField(max_length=100)
+    objects = JobCategoryManager()
+
 class UserManager(models.Manager):
     def validate(self, first_name, last_name, email):
         validation_errors = []
@@ -21,3 +30,25 @@ class User(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     objects = UserManager()
+
+class JobManager(models.Manager):
+    def validate(self, title, description, location):
+        validation_errors = []
+        if len(title) < 3:   
+            validation_errors.append(f"Title must be at least 3 chars")
+        if len(description) < 10:
+            validation_errors.append(f"Description must be at least 10 chars")
+        if location == "":
+            validation_errors.append(f"Location cannot be blank")
+        return validation_errors
+
+class Job(models.Model):
+    title = models.CharField(max_length=100)
+    description = models.CharField(max_length=100)
+    location = models.CharField(max_length=100)
+    categories = models.ManyToManyField(JobCategory, related_name="jobs")
+    users = models.ManyToManyField(User, related_name="jobs")
+    created_by = models.ForeignKey(User, related_name="created_by", on_delete=models.CASCADE)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)    
+    objects = JobCategoryManager()    
