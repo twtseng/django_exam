@@ -1,0 +1,97 @@
+{% extends "base.html" %}
+
+{% block title %}Login and Registration{% endblock %}
+{% block navbar_menuitems %}
+<li class="nav-item">
+    <a class="nav-link" href="/dashboard">Home</a>
+</li>
+{% endblock %}
+{% block content %}
+<div class="jumbotron p-5 d-flex flex-column flex-lg-row justify-content-around">
+    <div class="d-flex flex-column col-12 col-lg-5 p-0">
+        {% csrf_token %}
+        <div class="card">
+            <div class="card-body">
+                <h1 class="card-title">Create a Job!</h1>
+            </div>
+            <ul class="list-group list-group-flush">
+                <li class="list-group-item d-flex flex-column flex-lg-row">
+                    <label class="col-12 col-lg-3 p-0" for="title">Title</label>
+                    <input class="col-12 col-lg-8" type="text" name="title" id="title" value="">
+                </li>
+                <li class="list-group-item d-flex flex-column flex-lg-row">
+                    <label class="col-12 col-lg-3 p-0" for="description">Description</label>
+                    <input class="col-12 col-lg-8" type="text" name="description" id="description" value="">
+                </li>
+                <li class="list-group-item d-flex flex-column flex-lg-row">
+                    <label class="col-12 col-lg-3 p-0" for="location">Location</label>
+                    <input class="col-12 col-lg-8" type="text" name="location" id="location" value="">
+                </li>
+                <li class="list-group-item d-flex flex-column flex-lg-row">
+                    <label class="col-12 col-lg-3 p-0" for="categories">Categories</label>
+                    <div id="category_checkboxes">
+                        {% for cat in job_categories %}
+                        <input type="checkbox" class="job_category_checkbox" id="{{ cat.category }}" name="{{ cat.category }}" value="{{ cat.category }}">
+                        <label for="vehicle1">{{ cat.category }}</label><br>
+                        {% endfor %}
+                    </div>
+                </li>
+            </ul>
+            <div class="card-body">
+                <button id="cancel_button" class="btn btn-primary col-6">Cancel</button>
+            </div>
+            <div class="card-body">
+                <button id="add_job_button" class="btn btn-primary col-6">Add Job</button>
+            </div>
+            <div id="add_job_status" class="card-body">
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+{% block script %}
+<script>
+    function call_add_job_api(job_title,job_description,job_location,job_categories) {
+        csrfToken = $('input[name ="csrfmiddlewaretoken"]')[0].value
+        $.ajax({
+            url: "/add_job_api",
+            type: "POST",
+            data: { 
+                "job_title":job_title, 
+                "job_description" : job_description, 
+                "job_location" : job_location, 
+                "job_categories_string" : job_categories_string,
+                "csrfmiddlewaretoken" : csrfToken, 
+                },
+            cache:false,
+            dataType: "json",
+            success: function(resp){
+                $('#add_job_status').text(resp.message);
+                if (resp.status == "succeeded") {
+                    $('#add_job_status').css("color","green")
+                } else {
+                    $('#add_job_status').css("color","red")
+                }
+            }
+        });
+    }
+    function add_job() {
+        job_title = $("#title").val();
+        job_description = $("#description").val();
+        job_location = $("#location").val();
+        job_categories = [];
+        $('.job_category_checkbox').each(
+            function() {
+                if ($(this).prop('checked')) {
+                    category = $(this).val()
+                    job_categories.push(category);
+                }
+            }
+        )
+        job_categories_string = job_categories.join(",")
+        console.log(`job_title: ${job_title} job_description:${job_description} job_location:${job_location} job_categories:${job_categories}`)
+        call_add_job_api(job_title,job_description,job_location,job_categories_string);
+    }
+    $('#add_job_button').click(add_job)
+</script>
+{% endblock %}

@@ -214,3 +214,48 @@ def update_password_api(request):
             response['message'] = str(sys.exc_info()[0])
     return JsonResponse(response)    
 
+def new_job_view(request):
+    if "logged_in_user" not in request.session:
+        return redirect(reverse('signin_view'))
+    logged_in_user = get_logged_in_user(request)
+    job_categories = models.JobCategory.objects.all()
+    context = {
+        'logged_in_user' : logged_in_user,
+        'job_categories' : job_categories,
+    }
+    return render(request,"new_job.html", context)
+
+def add_job_api(request):
+    user = get_logged_in_user(request)
+    print(f"in add_job_api, user {user}")
+    print(request)
+    response = {
+        'status' : 'unknown',
+        'message' : 'unknown status'
+    }
+    if request.method == "POST":
+        print(f"in add_job_api POST block")
+        try:
+            job_title = request.POST["job_title"]
+            job_description = request.POST["job_description"]
+            job_location = request.POST["job_location"]
+            job = models.Job.objects.create(
+                title=job_title,
+                description=job_description,
+                location=job_location,
+                created_by=user
+            )
+            job_categories_string = request.POST["job_categories_string"]
+            if (job_categories_string > " "):
+                job_categories = job_categories_string.split(",")
+                for cat in models.JobCategory.objects.all():
+                    if cat.category in job_categories:
+                        print(f"Adding category [{cat.category}]")
+                        job.categories.add(cat)
+                    job.save()
+            response["status"] = "succeeded"
+            response["message"] = f"Created Job with Title=[{job_title}]."
+        except:
+            response['status'] = "failed"
+            response['message'] = str(sys.exc_info()[0])
+    return JsonResponse(response)   
