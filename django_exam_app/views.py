@@ -291,7 +291,7 @@ def dashboard_view(request):
                 myactions += f" | <a href='../jobs/remove/{job.id}'>Done</a>"
                 myactions += f" | <a href='../jobs/remove_job_from_user/{job.id}'>Give up</a>"
                 my_jobs_data_rows.append([job.title, myactions])
-                
+
         context = {
             'everyones_jobs_data_columns' : everyones_jobs_data_columns,
             'everyones_jobs_data_rows' : everyones_jobs_data_rows,
@@ -307,11 +307,16 @@ def view_job_view(request, job_id):
         return redirect(reverse('signin_view'))
     logged_in_user = get_logged_in_user(request)
     job = models.Job.objects.get(id=job_id)
+    created_by_me = job.created_by == logged_in_user
+    in_my_jobs = job in logged_in_user.jobs.all()
     context = {
+        'job_id' : job.id,
         'title' : job.title,
         'description' : job.description,
         'location' : job.location,
         'categories' : job.categories.all(),
+        'in_my_jobs' : in_my_jobs,
+        'created_by_me' : created_by_me,
     }
     return render(request,"view_job.html", context)
 

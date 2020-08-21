@@ -31,14 +31,17 @@
                     {% endfor %}
                 </li>
             </ul>
+            {% if in_my_jobs %}
             <div class="card-body">
-                <button id="give_up_button" class="btn btn-primary col-6">Give Up</button>
+                <a id="give_up_button" href="/jobs/remove_job_from_user/{{ job_id }}" class="btn btn-primary col-6">Give Up</a>
             </div>
+            {% else %}
             <div class="card-body">
-                <button id="add_job_button" class="btn btn-primary col-6">Add To My Jobs</button>
+                <a id="add_job_button" href="/jobs/add_job_to_user/{{ job_id }}" class="btn btn-primary col-6">Add To My Jobs</a>
             </div>
             <div id="add_job_status" class="card-body">
             </div>
+            {% endif %}
         </div>
     </div>
 </div>
