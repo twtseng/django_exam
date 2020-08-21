@@ -265,29 +265,33 @@ def dashboard_view(request):
     if "logged_in_user" in request.session:
         logged_in_user = get_logged_in_user(request)
         all_jobs = models.Job.objects.all()
-        everyones_jobs_data_columns=["Job","Location","Creator","Actions"]
+        everyones_jobs_data_columns=["Job","Location","Created by me","Actions"]
         everyones_jobs_data_rows = []
         my_jobs_data_columns=["Job","Actions"]
         my_jobs_data_rows = []
         for job in all_jobs:
+            created_by_me = job.created_by == logged_in_user
+            in_my_jobs = job in logged_in_user.jobs.all()
             actions=f"<a href='../jobs/{job.id}'>View</a>"
-            actions += f" | <a href='../jobs/remove/{job.id}'>Remove</a>"
-            actions += f" | <a href='../jobs/edit/{job.id}'>Edit</a>"
+            if created_by_me:
+                actions += f" | <a href='../jobs/remove/{job.id}'>Remove</a>"
+                actions += f" | <a href='../jobs/edit/{job.id}'>Edit</a>"
             actions += f" | <a href='../jobs/add_job_to_user/{job.id}'>Add job to me</a>"
-            actions += f" | <a href='../jobs/remove_job_from_user/{job.id}'>Remove job from me</a>"
+            
             data_row = [
                 job.title,
                 job.location,
-                job.created_by.email,
+                created_by_me,
                 actions,
             ]
-            everyones_jobs_data_rows.append(data_row)
-
-            if job in logged_in_user.jobs.all():
+            if not in_my_jobs:
+                everyones_jobs_data_rows.append(data_row)
+            else:
                 myactions=f"<a href='../jobs/{job.id}'>View</a>"
                 myactions += f" | <a href='../jobs/remove/{job.id}'>Done</a>"
                 myactions += f" | <a href='../jobs/remove_job_from_user/{job.id}'>Give up</a>"
                 my_jobs_data_rows.append([job.title, myactions])
+                
         context = {
             'everyones_jobs_data_columns' : everyones_jobs_data_columns,
             'everyones_jobs_data_rows' : everyones_jobs_data_rows,
